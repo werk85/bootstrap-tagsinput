@@ -1,9 +1,25 @@
+(function (root, factory) {
+  if (root === undefined && window !== undefined) root = window;
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module unless amdModuleId is set
+    define(["jquery"], function (a0) {
+      return (factory(a0));
+    });
+  } else if (typeof module === 'object' && module.exports) {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory(require("jquery"));
+  } else {
+    factory(root["jQuery"]);
+  }
+}(this, function ($) {
+
 /*
  * bootstrap-tagsinput v0.8.0
  * 
  */
 
-(function ($) {
   "use strict";
 
   var defaultOptions = {
@@ -350,20 +366,31 @@
 
       // typeahead.js
       if (self.options.typeaheadjs) {
+        // Determine if main configurations were passed or simply a dataset
+        var typeaheadjs = self.options.typeaheadjs;
+        if (!$.isArray(typeaheadjs)) {
+            typeaheadjs = [null, typeaheadjs];
+        }
 
-          // Determine if main configurations were passed or simply a dataset
-          var typeaheadjs = self.options.typeaheadjs;
-          if (!$.isArray(typeaheadjs)) {
-              typeaheadjs = [null, typeaheadjs];
+        $.fn.typeahead.apply(self.$input, typeaheadjs).on('typeahead:selected', $.proxy(function (obj, datum, name) {
+          var index = 0;
+          typeaheadjs.some(function(dataset, _index) {
+            if (dataset.name === name) {
+              index = _index;
+              return true;
+            }
+            return false;
+          });
+
+          // @TODO Dep: https://github.com/corejavascript/typeahead.js/issues/89
+          if (typeaheadjs[index].valueKey) {
+            self.add(datum[typeaheadjs[index].valueKey]);
+          } else {
+            self.add(datum);
           }
-          var valueKey = typeaheadjs[1].valueKey; // We should test typeaheadjs.size >= 1
-          var f_datum = valueKey ? function (datum) { return datum[valueKey];  }
-                                 : function (datum) {  return datum;  }
-          $.fn.typeahead.apply(self.$input,typeaheadjs).on('typeahead:selected', $.proxy(function (obj, datum) {
-              self.add( f_datum(datum) );
-              self.$input.typeahead('val', '');
-            }, self));
 
+          self.$input.typeahead('val', '');
+        }, self));
       }
 
       self.$container.on('click', $.proxy(function(event) {
@@ -674,4 +701,6 @@
   $(function() {
     $("input[data-role=tagsinput], select[multiple][data-role=tagsinput]").tagsinput();
   });
-})(window.jQuery);
+
+
+}));

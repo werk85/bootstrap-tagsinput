@@ -1,4 +1,3 @@
-(function ($) {
   "use strict";
 
   var defaultOptions = {
@@ -680,4 +679,3 @@
   $(function() {
     $("input[data-role=tagsinput], select[multiple][data-role=tagsinput]").tagsinput();
   });
-})(window.jQuery);
